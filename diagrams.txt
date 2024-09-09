@@ -1,0 +1,249 @@
+Great! I'll create three different types of diagrams for you:
+
+1. **Flowchart**: This will outline the main control flow, particularly focusing on how the track initialization logic progresses, along with the user interactions via the GUI.
+2. **State Transition Diagram**: This will represent the state changes in the track identification process, specifically focusing on track states like "tentative", "firm", or "free".
+3. **Sequence Diagram**: This will show the interaction between the user, GUI elements (buttons, input fields), and the key functions such as `initialize_tracks()` and `load_measurements_from_csv()`.
+
+Let's begin with the representations for each. I'll provide the **PlantUML** and **Mermaid** code for all three diagrams.
+
+---
+
+### 1. Flowchart for Track Initialization
+
+#### **Description:**
+The flowchart will show how the GUI inputs (CSV file, thresholds, initiation mode) are processed, how measurements are loaded, and how tracks are initialized and classified.
+
+#### **Mermaid Flowchart Code:**
+```mermaid
+graph TD
+    A[Start GUI] --> B[User inputs CSV file, Doppler, Range, Time Thresholds]
+    B --> C[Load CSV File and Extract Measurements]
+    C --> D{Track Exists?}
+    D --> |Yes| E[Check Doppler Correlation]
+    E --> F{Correlation & Range Satisfied?}
+    F --> |Yes| G[Assign to Track]
+    F --> |No| H[Create New Track]
+    D --> |No| H[Create New Track]
+    G --> I{Is Track Firm?}
+    I --> |Yes| J[Mark Track as Firm]
+    I --> |No| K[Increment Hit Count]
+    H --> L[Add New Track to List]
+    J --> M[Display Track Info]
+    K --> M[Display Track Info]
+    L --> M[Display Track Info]
+    M --> N[End]
+```
+
+#### **PlantUML Flowchart Code:**
+```plantuml
+@startuml
+start
+:Start GUI;
+:User inputs CSV file, Doppler, Range, Time thresholds;
+:Load CSV File and Extract Measurements;
+if (Track Exists?) then (Yes)
+  :Check Doppler Correlation;
+  if (Correlation & Range Satisfied?) then (Yes)
+    :Assign to Track;
+    if (Is Track Firm?) then (Yes)
+      :Mark Track as Firm;
+    else (No)
+      :Increment Hit Count;
+    endif
+  else (No)
+    :Create New Track;
+  endif
+else (No)
+  :Create New Track;
+endif
+:Display Track Info;
+stop
+@enduml
+```
+
+---
+
+### 2. State Transition Diagram for Track States
+
+#### **Description:**
+This diagram will show how a track transitions between different states: "tentative", "firm", or "free".
+
+#### **Mermaid State Transition Code:**
+```mermaid
+stateDiagram
+    [*] --> Free
+    Free --> Tentative: Create New Track
+    Tentative --> Firm: Hit Count >= Firm Threshold
+    Tentative --> Free: Miss Count > Firm Threshold
+    Firm --> Free: Track Released
+    Tentative --> Tentative: Hit Count < Firm Threshold
+    Firm --> Firm: Track Updated
+```
+
+#### **PlantUML State Transition Code:**
+```plantuml
+@startuml
+[*] --> Free
+Free --> Tentative: Create New Track
+Tentative --> Firm: Hit Count >= Firm Threshold
+Tentative --> Free: Miss Count > Firm Threshold
+Firm --> Free: Track Released
+Tentative --> Tentative: Hit Count < Firm Threshold
+Firm --> Firm: Track Updated
+@enduml
+```
+
+---
+
+### 3. Sequence Diagram for User Interaction and Track Initialization
+
+#### **Description:**
+The sequence diagram shows the interaction between the user, GUI components (file selection, button clicks), and the main logic for track initialization.
+
+#### **Mermaid Sequence Diagram Code:**
+```mermaid
+sequenceDiagram
+    participant User
+    participant GUI
+    participant load_measurements_from_csv
+    participant initialize_tracks
+
+    User ->> GUI: Browse and Select CSV File
+    User ->> GUI: Input Doppler, Range, Time thresholds
+    User ->> GUI: Select Initiation Mode
+    User ->> GUI: Click Initialize Tracks
+    GUI ->> load_measurements_from_csv: Load CSV File
+    load_measurements_from_csv ->> GUI: Return Measurements
+    GUI ->> initialize_tracks: Initialize Tracks with Inputs
+    initialize_tracks ->> GUI: Return Initialized Tracks
+    GUI ->> User: Display Track Info
+```
+
+#### **PlantUML Sequence Diagram Code:**
+```plantuml
+@startuml
+actor User
+participant GUI
+participant load_measurements_from_csv
+participant initialize_tracks
+
+User -> GUI: Browse and Select CSV File
+User -> GUI: Input Doppler, Range, Time thresholds
+User -> GUI: Select Initiation Mode
+User -> GUI: Click Initialize Tracks
+GUI -> load_measurements_from_csv: Load CSV File
+load_measurements_from_csv -> GUI: Return Measurements
+GUI -> initialize_tracks: Initialize Tracks with Inputs
+initialize_tracks -> GUI: Return Initialized Tracks
+GUI -> User: Display Track Info
+@enduml
+```
+
+---
+
+### Instructions for Visualizing the Diagrams
+
+1. **Using PlantUML**:
+   - Go to [PlantText](https://www.planttext.com/).
+   - Copy and paste the PlantUML code into the editor.
+   - Click "Refresh" to generate the diagram.
+
+2. **Using Mermaid**:
+   - Go to [Mermaid Live Editor](https://mermaid-js.github.io/mermaid-live-editor/).
+   - Copy and paste the Mermaid code into the editor.
+   - Click "Generate Diagram" to visualize it.
+
+3. **Using draw.io**:
+   - Open [draw.io](https://app.diagrams.net/).
+   - In the editor, go to **Extras > PlantUML** or **Extras > Mermaid**.
+   - Paste the respective code to generate diagrams directly within draw.io.
+
+---
+
+To create a detailed **State Transition Diagram** for the track identification and management system, we will dive deeper into the state changes that occur during the lifecycle of a track. Specifically, the system has three core track states:
+- **Free**: The track ID is available for assignment.
+- **Tentative**: A track has been created but is still in the process of verification. It requires a certain number of hits (successful measurements) to transition into a firm track.
+- **Firm**: The track is confirmed and considered stable.
+
+Additional details include:
+- The track transitions from "Tentative" to "Firm" after accumulating enough hits.
+- A track can return to the "Free" state if it misses too many measurements.
+- Tracks that are "Firm" can also be released, at which point they become "Free" again.
+  
+### Detailed **State Transition Diagram**:
+
+#### **States and Events**:
+1. **Free**: The state where no track is assigned or the track ID is available.
+   - Transition to **Tentative**: A new track is created from incoming measurements.
+   
+2. **Tentative**: A newly created track that is still being evaluated.
+   - Transition to **Firm**: If a track accumulates enough hits (`hit_counts >= firm_threshold`).
+   - Remain in **Tentative**: If hits are received but are not yet sufficient to reach the firm threshold.
+   - Transition to **Free**: If the track misses too many measurements (`miss_counts > firm_threshold`).
+   
+3. **Firm**: A confirmed track that is stable.
+   - Remain in **Firm**: If more hits are received and measurements continue to match the track.
+   - Transition to **Free**: If the track is released or no longer valid.
+
+#### Detailed Mermaid Code for State Transitions:
+```mermaid
+stateDiagram
+    [*] --> Free: Track ID Unoccupied
+    Free --> Tentative: Create New Track
+    Tentative --> Firm: Hit Count >= Firm Threshold
+    Tentative --> Tentative: Hit Count < Firm Threshold
+    Tentative --> Free: Miss Count > Firm Threshold
+    Firm --> Firm: Hit Count Maintained
+    Firm --> Free: Track Released or Invalid
+```
+
+#### Detailed PlantUML Code for State Transitions:
+```plantuml
+@startuml
+[*] --> Free : Track ID Unoccupied
+
+Free --> Tentative : Create New Track
+
+Tentative --> Firm : Hit Count >= Firm Threshold
+Tentative --> Tentative : Hit Count < Firm Threshold
+Tentative --> Free : Miss Count > Firm Threshold
+
+Firm --> Firm : Hit Count Maintained
+Firm --> Free : Track Released or Invalid
+
+@enduml
+```
+
+### Description of Each Transition:
+
+1. **Transition from Free to Tentative**:
+   - This happens when a new measurement is received, and no existing track can correlate with it. A new track ID is created, and the track is initialized as "tentative". In this state, the track is still under evaluation.
+
+2. **Tentative to Firm**:
+   - A track transitions to "firm" when it has enough hits. The number of hits is controlled by the `firm_threshold`. If a track gets enough consecutive hits without missing measurements, it is considered a valid track and is promoted to "firm".
+
+3. **Tentative to Free**:
+   - A track returns to the "free" state from "tentative" if it misses too many measurements. The miss count is compared against the `firm_threshold`, and if it exceeds the threshold, the tentative track is released, marking the track ID as "free".
+
+4. **Firm to Free**:
+   - A track can be released from the "firm" state back to "free" if the track is no longer valid or is manually released by the system. This might happen if the object being tracked is no longer detected, or the track is manually invalidated.
+
+5. **Tentative to Tentative**:
+   - If a track remains in the tentative state, it means that it has received some hits but not enough to be promoted to "firm". It stays in this state until either enough hits are accumulated, or it exceeds the miss count.
+
+6. **Firm to Firm**:
+   - A track that is in the "firm" state remains there as long as it continues to receive valid measurements that meet the Doppler, range, and time thresholds.
+
+### Diagram Visualization Instructions:
+- **For PlantUML**:
+  - Go to [PlantText](https://www.planttext.com/).
+  - Copy and paste the PlantUML code into the editor.
+  - Click "Refresh" to generate the detailed state transition diagram.
+
+- **For Mermaid**:
+  - Go to [Mermaid Live Editor](https://mermaid-js.github.io/mermaid-live-editor/).
+  - Copy and paste the Mermaid code into the editor.
+  - Click "Generate Diagram" to visualize the state transition.
+
+---
+

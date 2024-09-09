@@ -1,0 +1,104 @@
+To effectively test the various conditions of **Track ID Management**, **Track Deletion**, and **Track Assignment**, I'll generate a set of sample measurements designed to simulate:
+
+1. **New track creation**: New measurements that don’t match existing tracks, leading to the creation of new tracks.
+2. **Track re-use**: A track is deleted due to too many misses, and the track ID is reused for a new track.
+3. **Track assignment**: Measurements get correctly assigned to the smallest available free track ID.
+4. **Misses**: Tracks that do not get measurements assigned within the specified thresholds will miss and eventually be deleted.
+
+I'll create sample data with these criteria in mind:
+
+### Sample Data Plan:
+
+- The first set of measurements will initiate a few new tracks.
+- Additional measurements will simulate hits and misses.
+- Some tracks will be deleted due to too many misses, and new measurements will check if the freed track IDs are reused.
+  
+### Test Case 1: Sample Measurements
+
+```python
+sample_measurements = [
+    # New track creations
+    (10, 5, 100, 5, 0),   # New track ID 1
+    (50, 20, 500, 50, 1),  # New track ID 2
+    (90, 45, 900, 90, 2),  # New track ID 3
+    
+    # Continuation for tracks
+    (10.5, 5.2, 101, 5.1, 3),  # Should be assigned to Track ID 1
+    (50.5, 20.2, 505, 50.5, 4),  # Should be assigned to Track ID 2
+    (91, 46, 910, 91, 5),  # Should be assigned to Track ID 3
+
+    # Misses for Track ID 1
+    (11, 5.3, 110, 5.5, 6),  # Missed, no Doppler/Range correlation
+
+    # New track creation, causing previous tracks to hit their thresholds
+    (100, 50, 1000, 100, 7),  # New track ID 4
+    (120, 60, 1200, 120, 8),  # New track ID 5
+
+    # Track ID 3 misses too many times, should be deleted
+    (100.5, 50.3, 1005, 100.5, 9),  # Assigned to Track ID 4
+    (120.5, 60.5, 1205, 120.5, 10),  # Assigned to Track ID 5
+    
+    # Track ID 2 now gets too many misses, deleted
+    # New track reuses the freed ID 2
+    (60, 25, 600, 60, 11),  # New track, reuses Track ID 2 (previously deleted)
+    
+    # More measurements leading to deletions and reuses
+    (130, 70, 1300, 130, 12),  # New track ID 6
+    (10, 5, 105, 6, 13),  # Assigned to Track ID 1, which remains active
+    (131, 71, 1310, 131, 14),  # Assigned to Track ID 6
+]
+```
+
+### Explanation:
+
+1. **First 3 measurements** create new tracks: `Track ID 1`, `Track ID 2`, and `Track ID 3`.
+2. **Next 3 measurements** should be assigned to the same tracks since they satisfy Doppler and range gate conditions.
+3. **Measurement at `t=6`** causes `Track ID 1` to miss.
+4. **At `t=7` and `t=8`**, two new tracks (`Track ID 4` and `Track ID 5`) are created.
+5. **Track ID 3** eventually misses too many times and is deleted.
+6. **At `t=11`**, a new track measurement comes in, and `Track ID 2`, which was deleted earlier, is reused.
+
+### Test Case 2: Longer Sequence with More Reused IDs
+
+```python
+sample_measurements = [
+    # First wave of track creations
+    (15, 10, 150, 15, 0),   # New Track ID 1
+    (55, 30, 550, 55, 1),   # New Track ID 2
+    (95, 50, 950, 95, 2),   # New Track ID 3
+    (135, 70, 1350, 135, 3), # New Track ID 4
+
+    # Hits on all tracks
+    (15.1, 10.1, 152, 15.2, 4),  # Assigned to Track ID 1
+    (55.2, 30.3, 555, 55.5, 5),  # Assigned to Track ID 2
+    (95.5, 50.4, 955, 95.7, 6),  # Assigned to Track ID 3
+    (135.6, 70.7, 1355, 136, 7), # Assigned to Track ID 4
+
+    # Missing wave, causes deletion of some tracks
+    (120, 60, 1200, 120, 8),  # New track ID 5
+    (65, 35, 650, 65, 9),     # New track ID 6, Track ID 2 deleted
+
+    # Hits on existing track and re-use of Track ID 2
+    (66, 36, 660, 66, 10),  # Should be assigned to reused Track ID 2
+
+    # More new measurements, deletion and reuse checks
+    (170, 85, 1700, 170, 11), # New track ID 7
+    (180, 90, 1800, 180, 12), # New track ID 8
+    (20, 10, 200, 20, 13),    # Assigned to Track ID 1
+]
+```
+
+This longer sequence tests:
+
+- Track creation when the system already has multiple active tracks.
+- Hit assignments that keep existing tracks active.
+- Misses that eventually delete tracks, and re-use of freed track IDs for subsequent measurements.
+
+### Testing:
+
+You can run these test cases in your system to validate the following:
+- **Track ID assignment**: New tracks are assigned the smallest available ID.
+- **Track reuse**: When tracks are deleted due to misses, their IDs are marked `free` and reused for new tracks.
+- **Track deletion**: Tracks are deleted when they miss too many measurements.
+
+Would you like to proceed with running these measurements or refine the testing further?
